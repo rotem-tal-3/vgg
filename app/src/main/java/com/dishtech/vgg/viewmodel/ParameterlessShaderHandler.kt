@@ -1,13 +1,11 @@
 package com.dishtech.vgg.viewmodel
 
-import android.graphics.Bitmap
+import com.dishtech.vgg.shaders.Shader
 import com.dishtech.vgg.shaders.ShaderManager
-import com.dishtech.vgg.shaders.bar
 import com.dishtech.vgg.ui.gestures.Gesture
 
-class BarViewModel(val initialScheme: Bitmap) : ShaderViewModel {
-    private lateinit var shader : bar
-    override val components = Array(0) { ShaderViewModel.UIComponents.PICTURE_BUTTON }
+class ParameterlessShaderHandler(private val shaderName: String) : ShaderHandler {
+    private lateinit var shader : Shader
 
     override val name: String get() {
         if (this::shader.isInitialized) {
@@ -17,19 +15,20 @@ class BarViewModel(val initialScheme: Bitmap) : ShaderViewModel {
     }
 
     override fun onSurfaceRevoked() {
+        // Nothing to do.
     }
-
 
     override fun onSurfaceRegained() {
         initializeShaderIfNeeded()
         ShaderManager.renderShader(shader.name)
     }
 
-    override fun surfaceCreated() = initializeShaderIfNeeded()
-
-    private fun initializeShaderIfNeeded() {
+    override fun initializeShaderIfNeeded() {
         if (!this::shader.isInitialized) {
-            shader = ShaderManager.barShader(initialScheme)
+            val attemptToCreate = ShaderManager.getShaderNamed(shaderName) ?:  throw
+            RuntimeException("Failed loading shader $shaderName")
+            shader = attemptToCreate
+
         }
     }
 
@@ -37,7 +36,4 @@ class BarViewModel(val initialScheme: Bitmap) : ShaderViewModel {
         ShaderManager.renderShader(shader.name)
     }
 
-    override fun onGesture(gesture: Gesture) {
-        // Do nothing
-    }
 }
