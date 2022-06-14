@@ -4,20 +4,23 @@ import android.graphics.Bitmap
 import com.dishtech.vgg.shaders.ShaderManager
 import com.dishtech.vgg.shaders.tunnel
 import com.dishtech.vgg.ui.gestures.Gesture
+import com.dishtech.vgg.ui.gestures.GestureDelegate
 import com.dishtech.vgg.ui.gestures.Gestures
 
 
-class TunnelViewModel(texture0: Bitmap, texture1: Bitmap,
-                      val initialScheme: Bitmap) : ShaderViewModel {
+class TunnelHandler(texture0: Bitmap, texture1: Bitmap,
+                    val initialScheme: Bitmap) : ShaderHandler, GestureDelegate,
+                                                 DisplayableFeature {
     private lateinit var shader : tunnel
 
     var texture0 = texture0
-    set(value) {
-        field = value
-        if (this::shader.isInitialized) {
-            shader.iChannel0 = value
+        set(value) {
+            field = value
+            if (this::shader.isInitialized) {
+                shader.iChannel0 = value
+            }
         }
-    }
+
     var texture1 = texture1
         set(value) {
             field = value
@@ -25,9 +28,10 @@ class TunnelViewModel(texture0: Bitmap, texture1: Bitmap,
                 shader.iChannel1 = value
             }
         }
+
     override val components = arrayOf(
-        ShaderViewModel.UIComponents.PICTURE_BUTTON,
-        ShaderViewModel.UIComponents.PICTURE_BUTTON
+        DisplayableFeature.UIComponents.PICTURE_BUTTON,
+        DisplayableFeature.UIComponents.PICTURE_BUTTON
     )
 
     override val name: String get() {
@@ -46,15 +50,9 @@ class TunnelViewModel(texture0: Bitmap, texture1: Bitmap,
         ShaderManager.renderShader(shader.name)
     }
 
-    override fun surfaceCreated() {
-        initializeShaderIfNeeded()
-    }
-
-    private fun initializeShaderIfNeeded() {
+    override fun initializeShaderIfNeeded() {
         if (!this::shader.isInitialized) {
             shader = ShaderManager.tunnelShader(texture0, texture1, initialScheme)
-//            shader = ShaderManager.frag()
-
         }
     }
 

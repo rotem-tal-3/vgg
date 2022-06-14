@@ -8,46 +8,52 @@ import com.dishtech.vgg.ui.gestures.GestureDelegate
 class DefaultViewModelConfiguration(val inputHandlers: Array<FrameInputHandler>,
                                     val displayableFeatures: Array<DisplayableFeature>,
                                     val gestureResponders: Array<GestureDelegate>,
-                                    val shaderViewModel: ShaderViewModel,
+                                    val shaderHandler: ShaderHandler,
                                     val audioPlayer: AudioPlayer?)
 
 class DefaultViewModel(configuration: DefaultViewModelConfiguration) : ShaderViewModel {
 
-    override val components: Array<ShaderViewModel.UIComponents>
+    override val components: Array<DisplayableFeature.UIComponents>
         get() {
             return configuration.displayableFeatures.fold(arrayOf()) { arr, feature ->
                 return@fold arr + feature.components
             }
         }
     override val name: String
-        get() = configuration.shaderViewModel.name
+        get() = configuration.shaderHandler.name
 
     var configuration = configuration
-    get() = field
-    set(value) {
-        field.shaderViewModel.onSurfaceRevoked()
-        field = value
-        value.shaderViewModel.onSurfaceRegained()
-        value.audioPlayer?.play()
-    }
+        get() = field
+        set(value) {
+            field.shaderHandler.onSurfaceRevoked()
+            field = value
+            value.shaderHandler.onSurfaceRegained()
+            value.audioPlayer?.play()
+        }
 
     override fun onSurfaceRevoked() {
-        configuration.shaderViewModel.onSurfaceRevoked()
+        configuration.shaderHandler.onSurfaceRevoked()
     }
 
     override fun onSurfaceRegained() {
+        configuration.shaderHandler.onSurfaceRegained()
+    }
+
+    override fun initializeShaderIfNeeded() {
+        configuration.shaderHandler.initializeShaderIfNeeded()
     }
 
     override fun surfaceCreated() {
         configuration.audioPlayer?.play()
-        configuration.shaderViewModel.surfaceCreated()
+        configuration.shaderHandler.initializeShaderIfNeeded()
+        configuration.shaderHandler.onSurfaceRegained()
     }
 
     override fun drawFrame(timeInSeconds: Float) {
         for (inputHandler in configuration.inputHandlers) {
             inputHandler.drawFrame(timeInSeconds)
         }
-        configuration.shaderViewModel.drawFrame(timeInSeconds)
+        configuration.shaderHandler.drawFrame(timeInSeconds)
     }
 
     override fun onGesture(gesture: Gesture) {
