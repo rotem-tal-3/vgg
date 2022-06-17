@@ -4,6 +4,9 @@ import android.content.res.Resources
 import android.graphics.Bitmap
 import com.dishtech.vgg.BitmapUtils
 import com.dishtech.vgg.Color
+import com.dishtech.vgg.engine.Projections
+import com.dishtech.vgg.engine.Vec3f
+import kotlin.math.PI
 
 private class StoredShader(val shader: Shader, val glProgram: CompiledProgram)
 
@@ -22,6 +25,47 @@ object ShaderManager {
         "bar" to this::barShader
     )
 
+    val piF = 180f
+    val models = arrayOf(
+        Projections.modelTransform(Vec3f(0f), 0f, Vec3f(1f, 0.3f, 0.5f)),
+        Projections.modelTransform(
+            Vec3f(2f, 5f, -15f), piF / 8f,
+            Vec3f(1f, 0.3f, 0.5f)
+        ),
+        Projections.modelTransform(
+            Vec3f(-1.5f, -2.2f, -2.5f), piF / 4f,
+            Vec3f(1f, 0.3f, 0.5f)
+        ),
+        Projections.modelTransform(
+            Vec3f(-3.8f, -2f, -12.3f), 3*piF / 8f,
+            Vec3f(1f, 0.3f, 0.5f)
+        ),
+        Projections.modelTransform(
+            Vec3f(2.4f, -0.4f, -3.5f), piF / 2f,
+            Vec3f(1f, 0.3f, 0.5f)
+        ),
+        Projections.modelTransform(
+            Vec3f(-1.7f, 3f, -7.5f), 5*piF / 8f,
+            Vec3f(1f, 0.3f, 0.5f)
+        ),
+        Projections.modelTransform(
+            Vec3f(1.3f, -2f, -2.5f), 3*piF / 4f,
+            Vec3f(1f, 0.3f, 0.5f)
+        ),
+        Projections.modelTransform(
+            Vec3f(1.5f, -2f, -2.5f), piF,
+            Vec3f(1f, 0.3f, 0.5f)
+        ),
+        Projections.modelTransform(
+            Vec3f(1.5f, 0.2f, -1.5f), 9*piF / 8f,
+            Vec3f(1f, 0.3f, 0.5f)
+        ),
+        Projections.modelTransform(
+            Vec3f(-1.3f, 1f, -1.5f), 10*piF / 8f,
+            Vec3f(1f, 0.3f, 0.5f)
+        ),
+    )
+
     private var current : StoredShader? = null
 
     fun getCurrentShader() = current?.shader
@@ -30,9 +74,9 @@ object ShaderManager {
         if (shaderMap.containsKey(name)) {
             if (current?.shader?.name != name) {
                 current = shaderMap[name]
-                programCompiler.useProgram(shaderMap[name]!!.glProgram)
+                programCompiler.useProgram(shaderMap[name]!!.glProgram, models)
             } else {
-                programCompiler.setProgram(shaderMap[name]!!.glProgram)
+                programCompiler.setProgram(shaderMap[name]!!.glProgram, modelTransforms = models)
             }
         }
     }
