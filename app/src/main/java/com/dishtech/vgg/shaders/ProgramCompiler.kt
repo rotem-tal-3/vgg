@@ -95,22 +95,36 @@ class ProgramCompiler private constructor() {
         return CompiledProgram(program, compiledUniforms)
     }
 
-    fun useProgram(compiledProgram: CompiledProgram) {
+    fun useProgram(compiledProgram: CompiledProgram,
+                   modelTransforms: Array<FloatArray> = arrayOf()) {
         VertexHandler.loadAttributeLocations(compiledProgram.program)
         GLES30.glUseProgram(compiledProgram.program)
-        setProgram(compiledProgram, false)
+        setProgram(compiledProgram, false, modelTransforms)
         GLES30.glFinish()
     }
 
-    fun setProgram(compiledProgram: CompiledProgram, filter: Boolean = true) {
-        VertexHandler.loadShaderAttributesToGPU()
+    fun setProgram(compiledProgram: CompiledProgram, filter: Boolean = true,
+                   modelTransforms: Array<FloatArray> = arrayOf()) {
         setGLResources(if (filter) compiledProgram.resources.values.filter { it.needsSet }
                        else compiledProgram.resources.values)
+        if (modelTransforms.isEmpty()) {
+            drawCurrentVertexArray(!filter)
+            return
+        }
+        for (model in modelTransforms) {
+            VertexHandler.model.value = model
+            drawCurrentVertexArray(!filter)
+        }
+    }
+
+    private fun drawCurrentVertexArray(forceLoad: Boolean = false) {
+        VertexHandler.loadShaderAttributesToGPU(forceLoad)
 
         GLES30.glBlendFunc(GLES30.GL_SRC_ALPHA, GLES30.GL_ONE_MINUS_SRC_ALPHA)
         GLES30.glEnable(GLES20.GL_BLEND)
+        GLES30.glEnable(GLES30.GL_DEPTH_TEST)
 
-        GLES30.glDrawArrays(GLES30.GL_TRIANGLE_STRIP, 0, 4)
+        GLES30.glDrawArrays(VertexHandler.shapeData.drawMode, 0, VertexHandler.shapeData.size)
         ProgramUtils.checkGlError("glDrawArrays")
     }
 
