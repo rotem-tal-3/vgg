@@ -3,6 +3,7 @@ package com.dishtech.vgg.engine
 import android.content.res.Resources
 import android.opengl.Matrix
 import com.dishtech.vgg.*
+import kotlin.math.PI
 import kotlin.math.cos
 import kotlin.math.sin
 
@@ -15,20 +16,28 @@ class World(val scale: Vec3f, val position: Vec3f, val rotation: Vec3f, val zNea
             val zFar: Float)
 
 object Projections {
-    val aspectRatio = Resources.getSystem().getDisplayMetrics().widthPixels.toFloat() /
-            Resources.getSystem().getDisplayMetrics().heightPixels
+    val aspectRatio = Resources.getSystem().displayMetrics.widthPixels.toFloat() /
+            Resources.getSystem().displayMetrics.heightPixels
 
-    fun mvpProjection(world: World, camera: Camera): FloatArray {
-        val perspective = perspectiveProjection(camera.fov, world.zNear, world.zFar)
-        val cameraTransform = cameraTransform(camera)
-        val cameraPerspective = cameraTransform * perspective
-        val cameraTranslation = (-camera.position).toTranslationMatrix()
-        val worldTranslation = world.position.toTranslationMatrix()
-        val worldRotation = rotationTransform(world.rotation)
-        val worldScale = FloatArray(16)
-        Matrix.setIdentityM(worldScale, 0)
-        Matrix.scaleM(worldScale, 0, world.scale.x, world.scale.y, world.scale.z)
-        return worldScale * worldRotation * worldTranslation * cameraTranslation * cameraPerspective
+//    fun mvpProjection() {
+//        val cameraTransform = cameraTransform(camera)
+//        val cameraPerspective = cameraTransform * perspective
+//        val cameraTranslation = (-camera.position).toTranslationMatrix()
+//        val worldTranslation = world.position.toTranslationMatrix()
+//        val worldRotation = rotationTransform(world.rotation)
+//        val worldScale = FloatArray(16)
+//        Matrix.setIdentityM(worldScale, 0)
+//        Matrix.scaleM(worldScale, 0, world.scale.x, world.scale.y, world.scale.z)
+//        return worldScale * worldRotation * worldTranslation * cameraTranslation * cameraPerspective
+//    }
+
+    fun modelTransform(position: Vec3f, rotationAngle: Float, rotation: Vec3f): FloatArray {
+        return FloatArray(16).apply {
+            Matrix.setIdentityM(this, 0)
+            Matrix.translateM(this, 0, position.x, position.y, position.z)
+            Matrix.rotateM(this, 0, rotationAngle, rotation.x, rotation.y, rotation.z)
+        }
+
     }
 
     /**
@@ -37,12 +46,12 @@ object Projections {
      */
     fun perspectiveProjection(alpha: Float, nearZ: Float, farZ: Float): FloatArray {
         val tanComponent = Math.tan(alpha / 2.0).toFloat()
-        val zDist = nearZ - farZ
+        val zDist = farZ - nearZ
         return floatArrayOf(
             1f / (aspectRatio * tanComponent), 0f, 0f, 0f,
             0f, 1f / tanComponent, 0f, 0f,
-            0f, 0f, -(nearZ + farZ) / zDist, 2 * nearZ * farZ / zDist,
-            0f, 0f, 1f, 0f
+            0f, 0f, -farZ / zDist, -1f,
+            0f, 0f, -farZ * nearZ / zDist, 0f
         )
     }
 
