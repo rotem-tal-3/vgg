@@ -1,26 +1,16 @@
 package com.dishtech.vgg.viewmodel
 
+import com.dishtech.vgg.rendering.RenderedObject
 import com.dishtech.vgg.shaders.Shader
 import com.dishtech.vgg.shaders.ShaderManager
-import com.dishtech.vgg.ui.gestures.Gesture
 
 class ParameterlessShaderHandler(private val shaderName: String) : ShaderHandler {
     private lateinit var shader : Shader
-
     override val name: String get() {
         if (this::shader.isInitialized) {
             return shader.name
         }
         return ShaderViewModel.UNINITIALIZED
-    }
-
-    override fun onSurfaceRevoked() {
-        // Nothing to do.
-    }
-
-    override fun onSurfaceRegained() {
-        initializeShaderIfNeeded()
-        ShaderManager.renderShader(shader.name)
     }
 
     override fun initializeShaderIfNeeded() {
@@ -32,8 +22,9 @@ class ParameterlessShaderHandler(private val shaderName: String) : ShaderHandler
         }
     }
 
-    override fun drawFrame(timeInSeconds: Float) {
-        ShaderManager.renderShader(shader.name)
+    override fun renderShader(renderedObjects: Collection<RenderedObject>) {
+        initializeShaderIfNeeded()
+        ShaderManager.renderShader(name, renderedObjects)
     }
 
 }

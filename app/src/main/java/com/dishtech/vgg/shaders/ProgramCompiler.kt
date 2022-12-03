@@ -3,9 +3,9 @@ package com.dishtech.vgg.shaders
 import android.graphics.Bitmap
 import android.opengl.GLES20
 import android.opengl.GLES30
-import android.opengl.GLES32
 import android.util.Log
 import com.dishtech.vgg.BitmapUtils
+import com.dishtech.vgg.rendering.RenderedObject
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 
@@ -21,6 +21,7 @@ class CompiledProgram(val program: Int, val resources: Map<String, GLResource>)
 class ProgramCompiler private constructor() {
     companion object {
         private const val BUFFER = "samplerBuffer"
+        private const val CUBE = "samplerCube"
         private const val VEC = "vec"
         private const val MAT = "mat"
         private const val FLOAT = "float"
@@ -95,24 +96,20 @@ class ProgramCompiler private constructor() {
         return CompiledProgram(program, compiledUniforms)
     }
 
-    fun useProgram(compiledProgram: CompiledProgram,
-                   modelTransforms: Array<FloatArray> = arrayOf()) {
+    fun useProgram(compiledProgram: CompiledProgram, renderedObjects: Collection<RenderedObject>) {
         VertexHandler.loadAttributeLocations(compiledProgram.program)
         GLES30.glUseProgram(compiledProgram.program)
-        setProgram(compiledProgram, false, modelTransforms)
+        setProgram(compiledProgram, false, renderedObjects)
         GLES30.glFinish()
     }
 
     fun setProgram(compiledProgram: CompiledProgram, filter: Boolean = true,
-                   modelTransforms: Array<FloatArray> = arrayOf()) {
+                   renderedObjects: Collection<RenderedObject>) {
         setGLResources(if (filter) compiledProgram.resources.values.filter { it.needsSet }
                        else compiledProgram.resources.values)
-        if (modelTransforms.isEmpty()) {
-            drawCurrentVertexArray(!filter)
-            return
-        }
-        for (model in modelTransforms) {
-            VertexHandler.model.value = model
+        for (renderedObject in renderedObjects) {
+            VertexHandler.model.value = renderedObject.modelTransform
+            VertexHandler.shapeData = renderedObject.shapeData
             drawCurrentVertexArray(!filter)
         }
     }
@@ -157,6 +154,12 @@ class ProgramCompiler private constructor() {
                 textureCount++
                 val id = BitmapUtils.toGlTexture(it.value as Bitmap, false, channel)
                 return@map Pair(it.name, GLTexture(it, location, id, channel))
+            }
+            if (it.type == CUBE) {
+                val channel = TEXTURE_CHANNEL[textureCount]
+                textureCount++
+                val id = BitmapUtils.glCubeFromData(it.value as CubemapData, channel)
+                return@map Pair(it.name, GLCubemap(it, location, id, channel))
             }
             if (it.type == BUFFER) {
                 val channel = TEXTURE_CHANNEL[textureCount]
@@ -251,7 +254,7 @@ class ProgramCompiler private constructor() {
         }
         GLES30.glUniform1i(glResource.location, 0)
         GLES30.glActiveTexture(glResource.channel)
-        GLES30.glBindTexture(GLES30.GL_TEXTURE_2D, glResource.id)
+        GLES30.glBindTexture(glResource.textureType, glResource.id)
         glResource.needsSet = false
     }
 

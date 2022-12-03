@@ -37,7 +37,6 @@ class bar(override val uniforms: Array<Uniform>) : SpectrumShader, SchemeShader 
 			ShaderManager.setValueForShader(name, uniforms[1].name, value)
 		}
 	override var rawString = """#version 310 es
-#extension GL_EXT_texture_buffer : enable
 
 precision mediump float;
 
@@ -47,12 +46,18 @@ uniform float spectrum[7];
 in vec2 texCoord;
 out vec4 fragColor;
 
+vec3 rgb_to_yiq(vec3 rgb) {
+    float y = 0.30*rgb.x + 0.59*rgb.y + 0.11*rgb.z;
+    return vec3(y, -0.27*(rgb.z-y) + 0.74*(rgb.x-y),0.41*(rgb.z-y) + 0.48*(rgb.x-y));
+}
+
 void main() {
     int index = int(texCoord.x * 6.9999);
     float spec = spectrum[index];
-    vec3 black = vec3(0.0, 0.0, 0.0);
-    vec3 col = texture(scheme, texCoord).rgb;
-    fragColor = vec4(mix(col, black, step(texCoord.y, spec)), 1.0);
+    vec4 col = texture(scheme, texCoord);
+    vec3 yiq_col = rgb_to_yiq(col.rgb);
+
+    fragColor = mix(col, vec4(1.0 - yiq_col, 0.9), step(texCoord.y, spec));
 }"""
 }
 
@@ -309,6 +314,29 @@ void main()
 }
 
 """
+}
+
+class sky(override val uniforms: Array<Uniform>) : Shader {
+	constructor(sky: Array<Bitmap>): this(arrayOf(Uniform("sky", "samplerCube", sky)))
+	override val name = "sky"
+	var sky get() = uniforms[0].value
+		set(value) {
+			uniforms[0].value = value
+			ShaderManager.setValueForShader(name, uniforms[0].name, value)
+		}
+	override var rawString = """#version 310 es
+
+precision mediump float;
+
+uniform samplerCube sky;
+
+in vec2 texCoord;
+out vec4 fragColor;
+
+void main() {
+    vec3 coords = gl_Position.xyz + texCoord.x * 0.0;
+    fragColor = mix(texture(sky, coords), gl_FragColor, gl_FragColor.a);
+}"""
 }
 
 class spiral(override val uniforms: Array<Uniform>) : Shader {

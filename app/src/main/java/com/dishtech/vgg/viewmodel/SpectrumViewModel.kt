@@ -13,7 +13,7 @@ class SpectrumViewModel(private val audioPlayerSyncer: AudioPlayerSyncer) : Fram
                                                                             GestureDelegate,
                                                                             AudioPlayer {
 
-    override fun drawFrame(timeInSeconds: Float) {
+    override fun setShaderValueForTime(timeInSeconds: Float) {
         val value = audioPlayerSyncer.valueForTime(timeInSeconds)
         val current = ShaderManager.getCurrentShader() ?: return
         assert(current is SpectrumShader)

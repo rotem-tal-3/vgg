@@ -3,7 +3,12 @@ package com.dishtech.vgg.shaders
 import android.opengl.GLES30
 import com.dishtech.vgg.ext.toByteBuffer
 
-class VertexShapeData private constructor(private val vertices: FloatArray, val drawMode: Int) {
+class VertexShapeData private constructor(private val vertices: FloatArray, val drawMode: Int,
+                                          private val shapeType: ShapeType) {
+    private enum class ShapeType {
+        CUBE3D, QUAD
+    }
+
     val uvOffset: Int = when (drawMode) {
         GLES30.GL_TRIANGLE_STRIP, GLES30.GL_TRIANGLE_FAN, GLES30. GL_TRIANGLES -> 3
         GLES30.GL_LINE_STRIP, GLES30.GL_LINES, GLES30.GL_LINE_LOOP -> 2
@@ -22,7 +27,7 @@ class VertexShapeData private constructor(private val vertices: FloatArray, val 
         if (other !is VertexShapeData) {
             return false
         }
-        return (vertices contentEquals other.vertices) && (drawMode == other.drawMode)
+        return shapeType == other.shapeType
     }
 
     val size = vertices.size / VERTEX_SIZE
@@ -78,7 +83,7 @@ class VertexShapeData private constructor(private val vertices: FloatArray, val 
                 -0.5f, 0.5f, 0.5f, 0.0f, 0.0f,
                 -0.5f, 0.5f, -0.5f, 0.0f, 1.0f
             )
-            return VertexShapeData(vertices, GLES30.GL_TRIANGLES)
+            return VertexShapeData(vertices, GLES30.GL_TRIANGLES, ShapeType.CUBE3D)
         }
 
         fun quad(): VertexShapeData {
@@ -88,7 +93,18 @@ class VertexShapeData private constructor(private val vertices: FloatArray, val 
                 -1.0f, 1.0f, 0f, 0f, 0f,
                 1.0f, 1.0f, 0f, 1f, 0f
             )
-            return VertexShapeData(vertices, GLES30.GL_TRIANGLE_STRIP)
+            return VertexShapeData(vertices, GLES30.GL_TRIANGLE_STRIP, ShapeType.QUAD)
         }
+
+//        fun sphere(xSegments: Int, ySegments: Int) : VertexShapeData {
+//            val vertices = FloatArray(xSegments * ySegments * VERTEX_SIZE)
+//            for (y in 0..ySegments) {
+//                for (x in 0..xSegments) {
+//                    val xSegment = x.toFloat() / xSegments.toFloat()
+//                    val ySegment = y.toFloat() / ySegments.toFloat()
+//
+//                }
+//            }
+//        }
     }
 }

@@ -13,6 +13,7 @@ INT = "int"
 ARRAY = "[]"
 TEXTURE = "sampler2D"
 SAMPLER = "sampler1D"
+CUBE = "samplerCube"
 BUFFER = "samplerBuffer"
 VERTEX_SHADER_SUFFIX = "vsh"
 FRAGMENT_SHADER_SUFFIX = "fsh"
@@ -32,6 +33,7 @@ KT_INT = "Int"
 KT_MAT = "FloatArray"
 DECLARATION_SEP = ", "
 KT_TEXTURE = "Bitmap"
+KT_CUBE = f"Array<{KT_TEXTURE}>"
 KT_SAMPLER = "FloatArray"
 
 # Kotlin interfaces names.
@@ -73,6 +75,8 @@ def decompose_string_format(line):
 
 
 def gl_type_to_kotlin_class(gl_type: str):
+    if gl_type == CUBE:
+        return KT_CUBE
     if gl_type == BUFFER:
         return KT_MAT
     if gl_type == INT:

@@ -1,6 +1,7 @@
 package com.dishtech.vgg.viewmodel
 
 import android.graphics.Bitmap
+import com.dishtech.vgg.rendering.RenderedObject
 import com.dishtech.vgg.shaders.ShaderManager
 import com.dishtech.vgg.shaders.tunnel
 import com.dishtech.vgg.ui.gestures.Gesture
@@ -41,14 +42,6 @@ class TunnelHandler(texture0: Bitmap, texture1: Bitmap,
         return ShaderViewModel.UNINITIALIZED
     }
 
-    override fun onSurfaceRevoked() {
-        // Nothing to do.
-    }
-
-    override fun onSurfaceRegained() {
-        initializeShaderIfNeeded()
-        ShaderManager.renderShader(shader.name)
-    }
 
     override fun initializeShaderIfNeeded() {
         if (!this::shader.isInitialized) {
@@ -56,8 +49,9 @@ class TunnelHandler(texture0: Bitmap, texture1: Bitmap,
         }
     }
 
-    override fun drawFrame(timeInSeconds: Float) {
-        ShaderManager.renderShader(shader.name)
+    override fun renderShader(renderedObjects: Collection<RenderedObject>) {
+        initializeShaderIfNeeded()
+        ShaderManager.renderShader(name, renderedObjects)
     }
 
     override fun onGesture(gesture: Gesture) {

@@ -2,7 +2,10 @@ package com.dishtech.vgg.viewmodel
 
 import com.dishtech.vgg.quadrenderer.FrameInputHandler
 import com.dishtech.vgg.quadrenderer.RenderDelegate
+import com.dishtech.vgg.rendering.ObjectHandler
+import com.dishtech.vgg.rendering.RenderedObject
 import com.dishtech.vgg.ui.gestures.GestureDelegate
+
 
 interface DisplayableFeature {
     enum class UIComponents {
@@ -11,24 +14,16 @@ interface DisplayableFeature {
     val components : Array<UIComponents>
 }
 
-interface ShaderHandler : FrameInputHandler {
+interface ShaderHandler {
 
     val name: String
 
-    /**
-     * Called after the shader represented by this view was removed from being the used program.
-     */
-    fun onSurfaceRevoked()
-
-    /**
-     * Called after the shader represented by this view has gained access to the surface.
-     */
-    fun onSurfaceRegained()
-
     fun initializeShaderIfNeeded()
+
+    fun renderShader(renderedObjects: Collection<RenderedObject>)
 }
 
-interface ShaderViewModel : ShaderHandler, RenderDelegate, GestureDelegate, DisplayableFeature {
+interface ShaderViewModel : FrameInputHandler, GestureDelegate, DisplayableFeature, ShaderHandler {
     companion object {
         const val UNINITIALIZED = "Uninitialized"
     }

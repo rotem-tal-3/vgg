@@ -6,7 +6,7 @@ import com.dishtech.vgg.BitmapUtils
 import com.dishtech.vgg.Color
 import com.dishtech.vgg.engine.Projections
 import com.dishtech.vgg.engine.Vec3f
-import kotlin.math.PI
+import com.dishtech.vgg.rendering.RenderedObject
 
 private class StoredShader(val shader: Shader, val glProgram: CompiledProgram)
 
@@ -27,7 +27,7 @@ object ShaderManager {
 
     val piF = 180f
     val models = arrayOf(
-        Projections.modelTransform(Vec3f(0f), 0f, Vec3f(1f, 0.3f, 0.5f)),
+        Projections.modelTransform(Vec3f(0f), 15f, Vec3f(1f, 0.3f, 0.5f)),
         Projections.modelTransform(
             Vec3f(2f, 5f, -15f), piF / 8f,
             Vec3f(1f, 0.3f, 0.5f)
@@ -70,13 +70,13 @@ object ShaderManager {
 
     fun getCurrentShader() = current?.shader
 
-    fun renderShader(name: String) {
+    fun renderShader(name: String, renderedObjects: Collection<RenderedObject>) {
         if (shaderMap.containsKey(name)) {
             if (current?.shader?.name != name) {
                 current = shaderMap[name]
-                programCompiler.useProgram(shaderMap[name]!!.glProgram, models)
+                programCompiler.useProgram(shaderMap[name]!!.glProgram, renderedObjects)
             } else {
-                programCompiler.setProgram(shaderMap[name]!!.glProgram, modelTransforms = models)
+                programCompiler.setProgram(shaderMap[name]!!.glProgram, renderedObjects)
             }
         }
     }

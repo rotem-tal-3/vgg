@@ -8,11 +8,12 @@ import javax.microedition.khronos.egl.EGLConfig
 import javax.microedition.khronos.opengles.GL10
 
 interface FrameInputHandler {
-    fun drawFrame(timeInSeconds: Float)
+    fun setShaderValueForTime(timeInSeconds: Float)
 }
 
 interface RenderDelegate : FrameInputHandler {
     fun surfaceCreated()
+    fun render()
 }
 
 class QuadRenderer(var delegate: WeakReference<RenderDelegate>) : GLSurfaceView.Renderer {
@@ -44,6 +45,7 @@ class QuadRenderer(var delegate: WeakReference<RenderDelegate>) : GLSurfaceView.
         GLES30.glClear(GLES30.GL_DEPTH_BUFFER_BIT or GLES30.GL_COLOR_BUFFER_BIT)
 
         val timeInSeconds = (System.currentTimeMillis() - initTime).toFloat() * MILLI_TO_SEC
-        delegate.get()?.drawFrame(timeInSeconds)
+        delegate.get()?.setShaderValueForTime(timeInSeconds)
+        delegate.get()?.render()
     }
 }

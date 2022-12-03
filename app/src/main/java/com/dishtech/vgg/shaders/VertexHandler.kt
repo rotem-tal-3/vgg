@@ -65,10 +65,11 @@ object VertexHandler {
     private var inPositionHandle = UNKNOWN_ATTRIBUTE
     private var inTextureHandle = UNKNOWN_ATTRIBUTE
     private var verticesDataNeedsSet = true
-    var shapeData = VertexShapeData.cube3D()
+    val defaultCube = VertexShapeData.cube3D()
+    var shapeData = defaultCube
         set(value) {
+            verticesDataNeedsSet = value != field
             field = value
-            verticesDataNeedsSet = true
         }
 
     var vertexShaderSource = """#version 300 es
@@ -84,7 +85,6 @@ in vec3 inPosition;
 in vec2 inTexCoord;
 
 out vec2 texCoord;
-
 void main() {
     gl_Position = $VERTEX_PROJECTION * $VERTEX_VIEW * $VERTEX_MODEL * vec4(inPosition.xyz, 1);
     texCoord = ($VERTEX_MATRIX_STM * vec4(inTexCoord.xy, 0, 0)).xy;

@@ -5,6 +5,7 @@ import android.opengl.GLES20
 import android.opengl.GLES30
 import android.opengl.GLUtils
 import android.util.Log
+import com.dishtech.vgg.shaders.CubemapData
 import com.dishtech.vgg.shaders.ProgramUtils
 import kotlin.math.max
 import kotlin.math.pow
@@ -140,20 +141,39 @@ object BitmapUtils {
         return Bitmap.createBitmap(color, color.size, 1, config)
     }
 
+
+    fun glCubeFromData(cubemapData: CubemapData, textureSlot: Int) : Int {
+        val textureId = generateTextureID()
+        GLES30.glActiveTexture(textureSlot)
+        GLES30.glBindTexture(GLES30.GL_TEXTURE_CUBE_MAP, textureId)
+        GLES30.glTexParameteri(GLES30.GL_TEXTURE_CUBE_MAP, GLES30.GL_TEXTURE_MIN_FILTER,
+                               GLES30.GL_LINEAR)
+        GLES30.glTexParameteri(GLES30.GL_TEXTURE_CUBE_MAP, GLES30.GL_TEXTURE_MAG_FILTER,
+                               GLES30.GL_LINEAR)
+        GLES30.glTexParameteri(GLES30.GL_TEXTURE_CUBE_MAP, GLES30.GL_TEXTURE_WRAP_S,
+                               GLES30.GL_CLAMP_TO_EDGE)
+        GLES30.glTexParameteri(GLES30.GL_TEXTURE_CUBE_MAP, GLES30.GL_TEXTURE_WRAP_T,
+                               GLES30.GL_CLAMP_TO_EDGE)
+        GLES30.glTexParameteri(GLES30.GL_TEXTURE_CUBE_MAP, GLES30.GL_TEXTURE_WRAP_R,
+                               GLES30.GL_CLAMP_TO_EDGE)
+        for ((index, face) in cubemapData.withIndex()) {
+            GLUtils.texImage2D(GLES20.GL_TEXTURE_CUBE_MAP_POSITIVE_X + index,
+                               0, face, 0)
+        }
+        GLES30.glBindTexture(GLES30.GL_TEXTURE_CUBE_MAP, 0)
+        return textureId
+    }
+
     /**
      * Load texture from Bitmap and write it to the video memory, returns the txture ID.
      * @needToRecycle - do we need to recycle current Bitmap when we write it GPI?
      */
     @Throws(RuntimeException::class)
     fun toGlTexture(bitmap: Bitmap, needToRecycle: Boolean, textureSlot: Int): Int {
-        val textureIds = IntArray(1)
-        GLES30.glGenTextures(1, textureIds, 0)
-        if (textureIds[0] == 0) {
-            throw java.lang.RuntimeException("It's not possible to generate ID for texture")
-        }
+        val textureId = generateTextureID()
 
         GLES30.glActiveTexture(textureSlot)
-        GLES30.glBindTexture(GLES30.GL_TEXTURE_2D, textureIds[0])
+        GLES30.glBindTexture(GLES30.GL_TEXTURE_2D, textureId)
 
         // texture filters
         GLES30.glTexParameteri(
@@ -175,8 +195,16 @@ object BitmapUtils {
 
         // unbind texture from slot
         GLES30.glBindTexture(GLES30.GL_TEXTURE_2D, 0)
-        return textureIds[0]
+        return textureId
     }
 
+    private fun generateTextureID(): Int {
+        val textureIds = IntArray(1)
+        GLES30.glGenTextures(1, textureIds, 0)
+        if (textureIds[0] == 0) {
+            throw java.lang.RuntimeException("It's not possible to generate ID for texture")
+        }
+        return textureIds[0]
+    }
 }
 

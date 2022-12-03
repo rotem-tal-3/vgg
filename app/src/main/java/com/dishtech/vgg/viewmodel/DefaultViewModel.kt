@@ -2,6 +2,8 @@ package com.dishtech.vgg.viewmodel
 
 import com.dishtech.vgg.audio.AudioPlayer
 import com.dishtech.vgg.quadrenderer.FrameInputHandler
+import com.dishtech.vgg.rendering.ObjectHandler
+import com.dishtech.vgg.rendering.RenderedObject
 import com.dishtech.vgg.ui.gestures.Gesture
 import com.dishtech.vgg.ui.gestures.GestureDelegate
 
@@ -11,7 +13,8 @@ class DefaultViewModelConfiguration(val inputHandlers: Array<FrameInputHandler>,
                                     val shaderHandler: ShaderHandler,
                                     val audioPlayer: AudioPlayer?)
 
-class DefaultViewModel(configuration: DefaultViewModelConfiguration) : ShaderViewModel {
+class DefaultViewModel(val configuration: DefaultViewModelConfiguration) : ShaderViewModel {
+
 
     override val components: Array<DisplayableFeature.UIComponents>
         get() {
@@ -19,41 +22,21 @@ class DefaultViewModel(configuration: DefaultViewModelConfiguration) : ShaderVie
                 return@fold arr + feature.components
             }
         }
-    override val name: String
-        get() = configuration.shaderHandler.name
-
-    var configuration = configuration
-        get() = field
-        set(value) {
-            field.shaderHandler.onSurfaceRevoked()
-            field = value
-            value.shaderHandler.onSurfaceRegained()
-            value.audioPlayer?.play()
-        }
-
-    override fun onSurfaceRevoked() {
-        configuration.shaderHandler.onSurfaceRevoked()
-    }
-
-    override fun onSurfaceRegained() {
-        configuration.shaderHandler.onSurfaceRegained()
-    }
+    override val name = configuration.shaderHandler.name
 
     override fun initializeShaderIfNeeded() {
-        configuration.shaderHandler.initializeShaderIfNeeded()
-    }
-
-    override fun surfaceCreated() {
         configuration.audioPlayer?.play()
         configuration.shaderHandler.initializeShaderIfNeeded()
-        configuration.shaderHandler.onSurfaceRegained()
     }
 
-    override fun drawFrame(timeInSeconds: Float) {
+    override fun renderShader(renderedObjects: Collection<RenderedObject>) {
+        configuration.shaderHandler.renderShader(renderedObjects)
+    }
+
+    override fun setShaderValueForTime(timeInSeconds: Float) {
         for (inputHandler in configuration.inputHandlers) {
-            inputHandler.drawFrame(timeInSeconds)
+            inputHandler.setShaderValueForTime(timeInSeconds)
         }
-        configuration.shaderHandler.drawFrame(timeInSeconds)
     }
 
     override fun onGesture(gesture: Gesture) {
@@ -61,4 +44,5 @@ class DefaultViewModel(configuration: DefaultViewModelConfiguration) : ShaderVie
             gestureResponder.onGesture(gesture)
         }
     }
+
 }

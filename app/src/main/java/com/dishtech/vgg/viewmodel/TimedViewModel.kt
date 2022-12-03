@@ -13,7 +13,7 @@ class TimedViewModel(var timeTransform: (Float, params: FloatArray?) -> Float,
                      var params: FloatArray?,
                      var respondToGestures: Array<Gestures>) : FrameInputHandler, GestureDelegate {
 
-    override fun drawFrame(timeInSeconds: Float) {
+    override fun setShaderValueForTime(timeInSeconds: Float) {
         val shader = ShaderManager.getCurrentShader() ?: return
         assert(shader is TimedShader)
         (shader as TimedShader).iTime = timeTransform(timeInSeconds, params)
